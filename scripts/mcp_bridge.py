@@ -11,7 +11,7 @@ import time
 from pathlib import Path
 from typing import Any
 
-BRIDGE_DIR = Path("cache/mcp_bridge")
+from scripts.config import BRIDGE_DIR  # noqa: F401 — re-exported for back-compat
 
 
 def request(op: str, payload: dict) -> Path:

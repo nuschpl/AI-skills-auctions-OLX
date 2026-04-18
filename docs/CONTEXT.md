@@ -45,7 +45,7 @@ What's **deferred to a later plan**:
 
 ## Transport model (two first-class modes, not fallback)
 
-- `official` — OAuth2 Partner API. Needs approved developer app. Portable (token lives in `cache/tokens.json`, not Mac-bound).
+- `official` — OAuth2 Partner API. Needs approved developer app. Portable (token lives in `$OLX_SKILL_HOME/tokens.json`, not Mac-bound).
 - `browser` — logged-in Chrome cookies + `mcp__Claude_in_Chrome__*` for UI-only ops. Mac-bound (cookies local). Required permanently for paid promotions (API doesn't expose them).
 - `auto` — prefers `official` if tokens exist, else `browser`. Default.
 
@@ -67,7 +67,7 @@ scope = drive.readonly
 root_folder_id = <YOUR_AUKCJE_FOLDER_ID>   # Aukcje
 ```
 
-Persisted in `cache/config.json` as
+Persisted in `$OLX_SKILL_HOME/config.json` as
 `inbox_rclone = {"remote": "olx-gdrive", "path": "OLX"}`. When this is
 set it takes precedence over `inbox_path`.
 
@@ -112,7 +112,7 @@ subfolder discovery + `notes.txt` pickup is the next TODO** — see
 
 When the user reissues `olx new`, pick up here:
 
-1. **Read config.** `load_config(Path("cache/config.json"))`. If
+1. **Read config.** `load_config()` (defaults to `$OLX_SKILL_HOME/config.json`). If
    `cfg.inbox_rclone` is set (it is), prefer the rclone source over
    `cfg.inbox_path`.
 2. **List auction folders.** `rclone lsjson olx-gdrive:OLX` →
@@ -121,7 +121,7 @@ When the user reissues `olx new`, pick up here:
    Otherwise present the list and ask them to pick.
 4. **Per-folder contents.** `rclone lsjson olx-gdrive:OLX/<slug>` →
    image files (by suffix) + optional `notes.txt`.
-5. **Download to a scratch dir.** `cache/scratch/<slug>-<ts>/`.
+5. **Download to a scratch dir.** `$OLX_SKILL_HOME/scratch/<slug>-<ts>/`.
    Per-file `rclone copy` (one call per image, one for `notes.txt`
    if present). `notes.txt` → read into memory as `notes_text`.
 6. **Continue with the normal create flow** (photos.py → vision draft

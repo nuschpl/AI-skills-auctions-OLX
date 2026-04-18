@@ -19,9 +19,13 @@ OAuth2 Partner API and a logged-in-browser session.
 ```bash
 git clone git@github.com:nuschpl/AI-skills-auctions-OLX.git
 cd AI-skills-auctions-OLX
-python3.13 -m venv .venv
-.venv/bin/pip install -e '.[dev]'
 ln -s $PWD ~/.claude/skills/OLX   # makes the skill discoverable user-wide
+```
+
+The skill's setup check (first step of `SKILL.md`) creates the venv and installs dependencies under `$OLX_SKILL_HOME` (default `~/.olx-skill/venv`) the first time it runs — no manual setup needed. Tests run against that venv:
+
+```bash
+"$OLX_SKILL_HOME/venv/bin/pytest" -v        # or $HOME/.olx-skill/venv/bin/pytest
 ```
 
 ## First run
@@ -32,7 +36,8 @@ ln -s $PWD ~/.claude/skills/OLX   # makes the skill discoverable user-wide
    `Aukcje/OLX/` folder in your Drive and a read-only `olx-gdrive`
    rclone remote scoped to that folder. ~10 minutes, one-time.
 3. Optionally register an app at https://developer.olx.pl/ and save
-   credentials to `cache/app_credentials.json`:
+   credentials to `$OLX_SKILL_HOME/app_credentials.json` (default
+   `~/.olx-skill/app_credentials.json`):
    ```json
    {"client_id": "...", "client_secret": "...", "redirect_uri": "..."}
    ```
@@ -46,12 +51,12 @@ ln -s $PWD ~/.claude/skills/OLX   # makes the skill discoverable user-wide
 - `browser` — logged-in Chrome cookies + MCP for UI-only ops
 - `auto` — prefers `official` if tokens exist, else `browser` (default)
 
-Set with `scripts/config.py` or by editing `cache/config.json`.
+Set with `scripts/config.py` or by editing `$OLX_SKILL_HOME/config.json`.
 
 ## Tests
 
 ```bash
-.venv/bin/pytest -v
+"$OLX_SKILL_HOME/venv/bin/pytest" -v
 ```
 
 ## Docs

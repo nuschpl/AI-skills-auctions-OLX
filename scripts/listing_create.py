@@ -13,7 +13,7 @@ from scripts.auth_browser import (
     load_chrome_cookies,
 )
 from scripts.auth_oauth import TokenStore
-from scripts.config import Config, load_config
+from scripts.config import CONFIG_PATH, Config, TOKENS_PATH, load_config
 from scripts.inbox_rclone import RemoteListing, list_listings, load_listing
 from scripts.olx_api import OLX
 from scripts.photos import normalise_photo, strip_gps
@@ -22,9 +22,9 @@ from scripts.transports.official import OfficialTransport
 
 
 def build_olx() -> OLX:
-    cfg = load_config(Path("cache/config.json"))
+    cfg = load_config(CONFIG_PATH)
 
-    ts = TokenStore(Path("cache/tokens.json"))
+    ts = TokenStore(TOKENS_PATH)
     has_tokens = ts.load() is not None
     official = OfficialTransport(token_store=ts) if has_tokens else None
 
@@ -56,7 +56,7 @@ def source_listings(cfg: Config | None = None) -> list[RemoteListing]:
     Empty list when no rclone source is configured — caller should then
     fall back to ``inbox.scan_inbox(cfg.inbox_path)``.
     """
-    cfg = cfg or load_config(Path("cache/config.json"))
+    cfg = cfg or load_config(CONFIG_PATH)
     if not cfg.inbox_rclone:
         return []
     remote = cfg.inbox_rclone["remote"]
@@ -70,9 +70,11 @@ def fetch_listing(
     cfg: Config | None = None,
 ) -> tuple[list[Path], str | None]:
     """Download auction *name* from the rclone remote into *dest*."""
-    cfg = cfg or load_config(Path("cache/config.json"))
+    cfg = cfg or load_config(CONFIG_PATH)
     if not cfg.inbox_rclone:
-        raise RuntimeError("inbox_rclone is not configured in cache/config.json")
+        raise RuntimeError(
+            f"inbox_rclone is not configured in {CONFIG_PATH}"
+        )
     remote = cfg.inbox_rclone["remote"]
     path = cfg.inbox_rclone["path"]
     return load_listing(remote, path, name, dest)

@@ -71,9 +71,15 @@ These categories are scrubbed on `main` as of `002b2d9`. Re-introducing any of t
 
 ### What lives where (user-specific state, never committed)
 
-- `cache/config.json` (gitignored) — user's real `default_location` (city/district/landmark). Do not copy into the committed code.
-- `cache/app_credentials.json`, `cache/tokens.json`, `cache/session.json` (gitignored) — OAuth and browser-session secrets.
-- `references/xhr-recordings/*.har`, `*.json` (gitignored except `.gitkeep`) — captured live traffic, may contain cookies.
+User state lives entirely **outside** this repo, under `$OLX_SKILL_HOME` (default `~/.olx-skill/`). Nothing here should be read-from or written-to by the skill at runtime:
+
+- `$OLX_SKILL_HOME/config.json` — user's real `default_location` (city/district/landmark). Do not copy into the committed code.
+- `$OLX_SKILL_HOME/tokens.json`, `session.json`, `app_credentials.json` — OAuth and browser-session secrets.
+- `$OLX_SKILL_HOME/venv/` — Python dependencies for the skill. Re-created on first activation if missing.
+- `$OLX_SKILL_HOME/scratch/`, `mcp_bridge/` — transient per-listing workspaces and agent ↔ Python bridge files.
+- `references/xhr-recordings/*.har`, `*.json` (gitignored except `.gitkeep`, inside the repo) — captured live traffic, may contain cookies. Historical capture artifacts, not runtime state.
+
+The legacy `$SKILL_ROOT/cache/` directory is migrated from on first run (`scripts.config.load_config` copies `cache/config.json` to `$OLX_SKILL_HOME/config.json` if the latter is missing) but is otherwise deprecated — new code must not read from or write to it.
 
 ## See also
 

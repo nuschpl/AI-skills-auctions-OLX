@@ -10,7 +10,7 @@ def test_default_config_has_required_keys():
     }
     assert DEFAULT_CONFIG["mode"] == "auto"
     # default_location is intentionally empty in the distributed config; the
-    # real value lives in the user's gitignored cache/config.json.
+    # real value lives in the user's $OLX_SKILL_HOME/config.json.
     assert DEFAULT_CONFIG["default_location"] == {}
 
 

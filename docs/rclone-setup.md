@@ -16,7 +16,7 @@ Three layers, each set up separately:
 |---|---|---|
 | 1. Drive folders | Google Drive (browser) | Create `Aukcje/OLX/` and grab the folder ID from the URL |
 | 2. rclone remote | Terminal (`rclone config`) | Create a read-only remote `olx-gdrive` pinned to the `Aukcje` folder |
-| 3. Skill config | Terminal (Python) | Save `inbox_rclone` to `cache/config.json` |
+| 3. Skill config | Terminal (Python) | Save `inbox_rclone` to `$OLX_SKILL_HOME/config.json` (default `~/.olx-skill/config.json`) |
 
 **If Kopia is already using rclone on this Mac:** don't worry. We create
 a *new* remote block (`[olx-gdrive]`), Kopia's `[gdrive]` remote stays
@@ -186,18 +186,15 @@ that folder. Re-check both.
 
 ## Step 3 — Point the skill at the remote
 
-Save `inbox_rclone` into `cache/config.json`. One-liner:
+Save `inbox_rclone` into `$OLX_SKILL_HOME/config.json`. One-liner:
 
 ```bash
 cd "$SKILL_ROOT"  # e.g. ~/.claude/skills/OLX or your local clone
-.venv/bin/python -c "
-from pathlib import Path
+"$OLX_SKILL_HOME/venv/bin/python" -c "
 from scripts.config import load_config, save_config
-p = Path('cache/config.json')
-cfg = load_config(p)
+cfg = load_config()
 cfg.inbox_rclone = {'remote': 'olx-gdrive', 'path': 'OLX'}
-save_config(cfg, p)
-print(p.read_text())
+save_config(cfg)
 "
 ```
 
@@ -264,7 +261,7 @@ Considered and rejected. Downsides:
 rclone lets us (a) scope to one folder via `root_folder_id`, (b) see
 exactly when a file is fetched, (c) keep zero mirror on disk — only
 the photos for the auction currently being drafted land in
-`cache/scratch/`.
+`$OLX_SKILL_HOME/scratch/`.
 
 ## Why a separate remote from Kopia?
 

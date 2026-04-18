@@ -29,15 +29,27 @@ If the request is ambiguous (e.g. "OLX nie działa"), ask one clarifying questio
 
 ## Setup check (run first on every activation)
 
+User state (config, tokens, venv, scratch dirs) lives under `$OLX_SKILL_HOME` — default `~/.olx-skill/` — **not inside the skill repo**. This lets the same state survive plugin updates and work for both dev clones and plugin installs.
+
 ```bash
 cd "$SKILL_ROOT"
-[ -x .venv/bin/python ] || python3.13 -m venv .venv && .venv/bin/pip install -e '.[dev]'
+export OLX_SKILL_HOME="${OLX_SKILL_HOME:-$HOME/.olx-skill}"
+mkdir -p "$OLX_SKILL_HOME"
+
+# Venv lives under $OLX_SKILL_HOME so plugin updates don't wipe it.
+# pip install -e points at the current $SKILL_ROOT; on plugin update the
+# setup check re-runs and re-points the editable install at the new path.
+[ -x "$OLX_SKILL_HOME/venv/bin/python" ] || python3.13 -m venv "$OLX_SKILL_HOME/venv"
+"$OLX_SKILL_HOME/venv/bin/pip" install -e "$SKILL_ROOT[dev]" --quiet
 ```
 
-Load config:
+Load config (the first call also migrates a legacy `$SKILL_ROOT/cache/config.json` into `$OLX_SKILL_HOME/config.json` if the XDG file doesn't exist yet, so existing users don't lose their settings):
+
 ```bash
-.venv/bin/python -c "from scripts.config import load_config; from pathlib import Path; import json; print(json.dumps(load_config(Path('cache/config.json')).__dict__, default=str, ensure_ascii=False, indent=2))"
+"$OLX_SKILL_HOME/venv/bin/python" -c "from scripts.config import load_config; import json; print(json.dumps(load_config().__dict__, default=str, ensure_ascii=False, indent=2))"
 ```
+
+From this point on, invoke Python as `"$OLX_SKILL_HOME/venv/bin/python" -m scripts.<module>`. Never reach into `$SKILL_ROOT/cache/` — that path is deprecated and unused by new code.
 
 **Photo source resolution** (in priority order):
 
@@ -54,8 +66,8 @@ Load config:
    the browser steps (create `Aukcje/OLX/` folders, grab folder ID),
    the console steps (`rclone config` creating `olx-gdrive` with
    `scope=drive.readonly` and `root_folder_id`), and how to save
-   `inbox_rclone` into `cache/config.json`. Don't try to walk them
-   through it verbally — hand them the doc.
+   `inbox_rclone` into `$OLX_SKILL_HOME/config.json`. Don't try to walk
+   them through it verbally — hand them the doc.
 
 ## Setup docs (point user here if anything's missing)
 
@@ -92,7 +104,7 @@ Load config:
        they land as `notes.md`).
      - Show the slugs + photo counts; user picks one (or passes it as
        `olx new <slug>`).
-     - `photos, notes_text = fetch_listing(slug, Path("cache/scratch/<slug>-<ts>"))`
+     - `photos, notes_text = fetch_listing(slug, paths.SCRATCH_DIR / f"<slug>-<ts>")` (import `paths` from `scripts.config`)
        — one `rclone copy` materializes the whole folder. `notes_text`
        is the contents of `notes.md` (or `notes.txt`) when present
        (trusted hint; headings/bullets in Markdown preserved), else
@@ -311,7 +323,7 @@ Hard lines:
 
 Include, always: size/dimensions, condition (in plain Polish —
 "bardzo dobry", "lekkie ślady użytkowania", not marketing grades),
-and the pickup line (from `config.default_location` in `cache/config.json` unless user says otherwise).
+and the pickup line (from `config.default_location` in `$OLX_SKILL_HOME/config.json` unless user says otherwise).
 
 ## Credibility rules (apply to every publish)
 
@@ -333,7 +345,7 @@ Drives `scripts/bootstrap_dryrun.py`. Posts a dummy bike-light set defined
 in `DUMMY_LISTING` — **never the user's real helmet**, verifies live,
 captures every XHR, then deletes within ~10 minutes.
 
-Python writes MCP request files to `cache/mcp_bridge/<ts>.bootstrap_create.request.json`.
+Python writes MCP request files to `$OLX_SKILL_HOME/mcp_bridge/<ts>.bootstrap_create.request.json`.
 You (the agent) must:
 
 1. Read the request file.
