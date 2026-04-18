@@ -1,0 +1,20 @@
+.venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+.DS_Store
+.claude/
+
+# Cache: local user state
+cache/*
+!cache/.gitkeep
+
+# References with private material
+references/xhr-recordings/*.har
+references/xhr-recordings/*.json
+
+# Secrets never committed
+*.secret.json
+app_credentials.json
+tokens.json
+session.json

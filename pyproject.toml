@@ -1,0 +1,24 @@
+[project]
+name = "olx-skill"
+version = "0.1.0"
+description = "Claude Code skill for OLX.pl quick listing and management"
+requires-python = ">=3.13"
+dependencies = [
+    "requests>=2.32",
+    "beautifulsoup4>=4.12",
+    "lxml>=5.2",
+    "Pillow>=10.4",
+    "browser-cookie3>=0.20",
+    "piexif>=1.1",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.3",
+    "pytest-mock>=3.14",
+    "responses>=0.25",
+]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["."]

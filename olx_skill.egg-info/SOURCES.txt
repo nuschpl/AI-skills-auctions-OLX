@@ -1,0 +1,6 @@
+pyproject.toml
+olx_skill.egg-info/PKG-INFO
+olx_skill.egg-info/SOURCES.txt
+olx_skill.egg-info/dependency_links.txt
+olx_skill.egg-info/requires.txt
+olx_skill.egg-info/top_level.txt
