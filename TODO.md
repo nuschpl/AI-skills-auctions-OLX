@@ -76,12 +76,12 @@ Fix the skill so this flow Just Works next time:
       include = ["scripts*"]` in this run — verify it stays there and
       add a `tests/test_packaging.py` that does an editable install in
       a throwaway venv to catch regressions.
-- [ ] **Record an "auth refresh" recipe in
-      `references/olx-reverse-engineering.md`.** Document where the
-      fresh `access_token` lives (auth0 SPA localStorage key, body
-      fields), how `apollo-tk` reappears (visiting any OLX page after
-      login), and that Chrome's AppleScript gate is the cleanest
-      read-only path.
+- [x] **Record an "auth refresh" recipe in
+      `references/olx-reverse-engineering.md`.** Done 2026-04-19: full
+      Cognito stack documented (pool eu-west-1_dUjFuvTf4, hosted UI
+      pl-idp.login.olx.com, client_id 6j7elk01p32o648o1io8lvhhab,
+      access_token cookie = Cognito id_token). See the "Full stack"
+      section in that file.
 - [ ] **Teach the skill to survive the Chrome MCP JWT block.** The MCP
       JS tool replaces JWT-shaped return values with `"[BLOCKED: JWT
       token]"`, so any "read a token via MCP" path is dead. SKILL.md
@@ -147,6 +147,23 @@ Fix the skill so this flow Just Works next time:
       `createdAt` — so the real field names are `createdAt` /
       `validToAt` (probably). Next live run: probe each one, confirm
       the shape, and wire them into `Advert`.
+
+## Session 2026-04-19 — auth deep-dive findings
+
+- [x] **Cognito PKCE auth** (`scripts/auth_cognito.py`). Endpoints confirmed
+      live. `run_pkce_flow()` + `CognitoTokenStore` implemented. One-time
+      browser login → browser-free refresh_token flow forever after.
+- [x] **HTTP request recorder** (`scripts/http_recorder.py`). `OLX_RECORD=1`
+      env var wraps `BrowserTransport` session transparently. Writes to
+      `references/xhr-recordings/<label>_<ts>.json` with token redaction.
+- [ ] **Capture `apollo-tk` mint endpoint.** Session confirmed: apollo-tk is
+      NOT in Chrome cookies unless the user recently used the photo upload UI.
+      Simple page GETs don't trigger it. To find the endpoint: run
+      `OLX_RECORD=1` during a real `olx new` with photos — the recorder will
+      capture the mint call automatically. Until then,
+      `BrowserTransport.upload_photo` will raise if apollo-tk is absent.
+      Workaround: open `https://www.olx.pl/d/nowe-ogloszenie/` in Chrome,
+      click the photo upload area (don't upload anything), then re-run.
 
 ## Wiring that doesn't need a live run
 
