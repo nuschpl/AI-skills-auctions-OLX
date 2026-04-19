@@ -19,6 +19,9 @@ dev = [
     "responses>=0.25",
 ]
 
+[tool.setuptools.packages.find]
+include = ["scripts*"]
+
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 pythonpath = ["."]

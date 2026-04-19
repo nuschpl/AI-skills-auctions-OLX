@@ -13,6 +13,17 @@ Three hosts are involved:
 - ``ireland.apollo.olxcdn.com`` — photo CDN; uploads use a *separate*
   short-lived Apollo JWT (the ``apollo-tk`` cookie), not the main
   ``access_token``.
+
+Recording HTTP for future reverse-engineering
+---------------------------------------------
+Set ``OLX_RECORD=1`` before running the skill to capture all HTTP
+exchanges to ``references/xhr-recordings/``.  This avoids the need to
+replay Chrome MCP sessions when hunting undocumented endpoints.
+
+    OLX_RECORD=1 python -m scripts.olx_api ...
+
+The recording wraps the session transparently via
+``scripts.http_recorder.maybe_record``.
 """
 from __future__ import annotations
 
@@ -21,6 +32,7 @@ from pathlib import Path
 
 import requests
 
+from scripts.http_recorder import maybe_record
 from scripts.transports.base import Advert, Transport
 
 STATUS_URL = "https://www.olx.pl/api/v1/users/me/profile/extended/"
@@ -116,7 +128,8 @@ class BrowserTransport(Transport):
         user_id: str | None = None,
         apollo_token: str | None = None,
     ):
-        self.session = session
+        # Wrap with recorder when OLX_RECORD=1 — transparent, no-op otherwise.
+        self.session = maybe_record(session, label="browser_transport")
         self.user_id = user_id
         self.apollo_token = apollo_token
 

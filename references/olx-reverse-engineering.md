@@ -7,17 +7,50 @@ then deleting it. Raw request/response fixtures live in
 human-readable cheat-sheet — it explains *why* things work the way
 they do, which you can't tell from the fixtures alone.
 
-**Last verified:** 2026-04-18 against live OLX.pl (ad id 999999999,
-created + deactivated in one session).
+**Last verified:** 2026-04-18 (bootstrap), 2026-04-19 (auth model deep-dive).
+Bootstrap listing: ad id 999999999, created + deactivated in one session.
 
 ## The auth model
 
-OLX uses **two independent JWTs**, each in its own cookie on `.olx.pl`:
+### Full stack (decoded 2026-04-19)
+
+```
+Google OAuth2 (OIDC IdP, federated)
+  ↓ authorization_code → id_token
+AWS Cognito User Pool eu-west-1_dUjFuvTf4
+  Hosted UI domain: pl-idp.login.olx.com   ← OLX-branded Cognito domain
+  App Client ID:    6j7elk01p32o648o1io8lvhhab
+  OIDC endpoints (confirmed live via discovery):
+    authorize: https://pl-idp.login.olx.com/oauth2/authorize
+    token:     https://pl-idp.login.olx.com/oauth2/token
+    userinfo:  https://pl-idp.login.olx.com/oauth2/userInfo
+    issuer:    https://cognito-idp.eu-west-1.amazonaws.com/eu-west-1_dUjFuvTf4
+  ↓ issues id_token (as "access_token" cookie) + refresh_token
+OLX frontend (auth0-spa-js SDK, audience "default")
+  LocalStorage key: @@auth0spajs@@::6j7elk01p32o648o1io8lvhhab::default::openid profile email offline_access
+  Stores: access_token (Cognito access_token, len≈1075), refresh_token (len≈3228), id_token
+  Cookies set on .olx.pl:
+    access_token   — Cognito *id_token* (token_use: id), len≈1400, used as Bearer for OLX APIs
+    apollo-tk      — short-lived Apollo CDN JWT, minted separately (see below)
+    auth_state     — opaque session marker
+    _legacy_auth0.<client_id>.is.authenticated — auth0-spa-js flag
+    auth0.<client_id>.is.authenticated         — auth0-spa-js flag
+OLX backend (REST + GraphQL + Apollo CDN)
+```
+
+**Important subtlety:** the cookie named `access_token` on `.olx.pl` is
+actually a Cognito **id_token** (`token_use: id` claim, has user
+claims like `email`, `identities`), not a Cognito access_token. OLX's
+backend validates id_tokens as Bearer credentials. The real Cognito
+access_token (len≈1075) lives in localStorage and is not used for API
+calls.
+
+### Two independent bearer tokens
 
 | Cookie | Length | Audience | Used for | TTL |
 |---|---|---|---|---|
-| `access_token` | ~1400 char | OLX core API | REST + GraphQL (`Authorization: Bearer …`) | hours |
-| `apollo-tk` | ~205 char | `aud: Apollo`, `sub: user_id` | Photo uploads only (`ireland.apollo.olxcdn.com`) | **~1 hour** |
+| `access_token` | ~1400 char | OLX core API (is Cognito id_token) | REST + GraphQL (`Authorization: Bearer …`) | ~1 h |
+| `apollo-tk` | ~205 char | `aud: Apollo`, `sub: user_id` | Photo uploads only (`ireland.apollo.olxcdn.com`) | **~1 h** |
 
 Key consequences:
 
@@ -26,13 +59,38 @@ Key consequences:
    not accept the cookie-only form. Our `build_session_from_cookies`
    mirrors this: it reads the cookie, then also promotes its value to
    the session's default `Authorization` header.
-2. **`apollo-tk` is short-lived and domain-separate.** It disappears
-   from the cookie jar if the user hasn't touched OLX recently. The
-   first `browser_cookie3.chrome()` dump in a session sometimes omits
-   it; open any OLX page in Chrome and it reappears. For uploads we
-   re-extract cookies immediately before posting.
+2. **`apollo-tk` is short-lived and separately minted.** Confirmed
+   2026-04-19: `apollo-tk` is NOT present in Chrome cookies during a
+   normal session unless the user has recently used the photo upload UI.
+   Simple page GETs (including `/d/nowe-ogloszenie/`) do NOT trigger
+   its creation. The mint mechanism is not yet captured — it is likely
+   triggered by the photo upload UI interaction in the posting form. Run
+   `OLX_RECORD=1` during a real photo upload to capture the mint
+   endpoint.  **TODO: capture with `OLX_RECORD=1` and add recording.**
 3. **Uploads go to a different host.** `ireland.apollo.olxcdn.com` only
    accepts the Apollo token, never `access_token`. Don't try to unify.
+
+### PKCE / scriptless auth (no Chrome needed after one-time setup)
+
+To authenticate without requiring a logged-in Chrome session:
+
+```python
+from scripts.auth_cognito import run_pkce_flow, CognitoTokenStore
+tokens = run_pkce_flow()   # opens browser URL, user logs in with Google
+CognitoTokenStore().save(tokens)
+```
+
+Then to refresh without browser:
+```python
+from scripts.auth_cognito import refresh_tokens, CognitoTokenStore
+store = CognitoTokenStore()
+if store.needs_refresh():
+    tokens = refresh_tokens(store.load()["refresh_token"])
+    store.save(tokens)
+```
+
+The access_token returned is the Cognito id_token, ready to use as
+`Authorization: Bearer` for OLX APIs.
 
 ### Session-validity probe
 
