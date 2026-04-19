@@ -10,30 +10,38 @@ Read this first when picking up work on the OLX skill. Keeps assumptions and con
 
 ## Design & decisions — read before proposing changes
 
-1. `docs/superpowers/specs/2026-04-18-olx-skill-design.md` — the spec, including the two-mode transport decision and what v1 explicitly defers.
-2. `docs/superpowers/plans/2026-04-18-olx-skill-v1.md` — the task-by-task plan that produced v1.
-3. `docs/decisions.md` — running log of every decision with rationale and what each rules out.
-4. `references/olx-reverse-engineering.md` — **read before touching `scripts/transports/browser.py` or `auth_browser.py`**. Full notes on the OLX REST + GraphQL + Apollo surfaces, two-token auth model, form-fill quirks, and gotchas learned from the live bootstrap capture. Raw fixtures: `references/xhr-recordings/bootstrap.json`.
-5. `references/olx-listing-limits.md` — per-category free-listing limits (Załącznik nr 3, V41). Consult in the drafting step so the user sees the limit next to the proposed category, and so the skill refuses to attempt free-publish into paid-only categories (motoryzacja/nieruchomości sprzedaż, praca, usługi, rasowe psy/koty, etc.).
+1. `docs/ARCHITECTURE.md` — **start here**. Single-page system overview: module map, auth stack, data flow, external hosts, file layout.
+2. `docs/superpowers/specs/2026-04-18-olx-skill-design.md` — the spec, including the two-mode transport decision and what v1 explicitly defers.
+3. `docs/superpowers/plans/2026-04-18-olx-skill-v1.md` — the task-by-task plan that produced v1.
+4. `docs/decisions.md` — running log of every decision with rationale and what each rules out.
+5. `references/olx-reverse-engineering.md` — **read before touching `scripts/transports/browser.py`, `auth_browser.py`, or `auth_cognito.py`**. Full auth stack decoded (Cognito pool, pl-idp.login.olx.com, id_token vs access_token subtlety), all HTTP endpoints, form-fill quirks. Raw fixtures: `references/xhr-recordings/bootstrap.json`.
+6. `references/olx-listing-limits.md` — per-category free-listing limits (Załącznik nr 3, V41).
 
 If something about the architecture looks off, it's probably a deliberate tradeoff documented there.
 
-## State of v1
+## State (checkpoint 2026-04-19)
 
-35 unit tests pass. What's implemented:
+**87 unit tests pass.** What's implemented and working in prod:
 
-- Config, capability matrix/router, pure photo utilities, inbox scanner, price stats, OAuth2 auth layer (URL build + code exchange + refresh), browser-mode auth (Chrome cookie extract + session validate), transport base + browser skeleton (get_user / list / delete), OLX facade, competitor search, bootstrap harness (Python side), SKILL.md entry point, manage + promote glue, Mode A stub.
+- Full `olx new` pipeline (rclone → vision → competitor search → draft → publish)
+- `olx manage` (list + deactivate)
+- `olx status` (active ads vs. per-category limits)
+- `BrowserTransport`: create_advert, upload_photo, list, delete, search
+- `auth_cognito.py`: PKCE flow + browser-free token refresh
+- `http_recorder.py`: opt-in HTTP capture (OLX_RECORD=1)
 
-What's **deliberately blocked** on a live run and should NOT be filled in from docs:
+**Live run completed 2026-04-19:** a real listing (bike helmet) posted and live.
+Lessons → `docs/decisions.md` + `TODO.md` (session section).
 
-- ~~`scripts/transports/browser.py::create_advert` and `upload_photo` — NotImplementedError.~~ **Resolved 2026-04-18.** Filled in from a live `olx bootstrap` capture (posted → verified → deactivated dummy bike-light listing, ad id 999999999). The endpoints, auth model, and gotchas are documented in `references/olx-reverse-engineering.md`; raw request/response fixtures in `references/xhr-recordings/bootstrap.json`. The "don't guess from docs" rule still applies to anything *else* that's labeled NotImplementedError.
+**Known open issues:**
+- `apollo-tk` mint endpoint unknown → upload fails if cookie expired (workaround: click photo upload area in Chrome first)
+- `browser_cookie3` returns stale token when Chrome is running → use `auth_cognito.py` PKCE path for headless runs
+- `BrowserTransport` build requires manual token wiring → `OLX.from_config()` factory TODO
 
-What's **deferred to a later plan**:
-
-- Mode A (OAuth2) advert CRUD endpoints — blocked on OLX developer-app approval.
-- Background pre-drafting daemon (v2).
-- claude.ai drafter integration (v2 nice-to-have).
-- Auto-renew cron, multi-account, cross-posting.
+**Deferred to a later plan:**
+- Mode A (OAuth2 Partner API) advert CRUD — blocked on OLX developer-app approval
+- `auth_applescript.py` — fresh token via AppleScript JS (see TODO.md)
+- Auto-renew cron, multi-account, cross-posting (v2)
 
 ## Non-negotiables (baked into SKILL.md)
 

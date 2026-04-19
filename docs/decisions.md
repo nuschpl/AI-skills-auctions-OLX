@@ -4,6 +4,49 @@ Running log, most recent at top. Each entry: what we decided, why, and what it r
 
 ---
 
+## 2026-04-19 — Cognito auth stack fully decoded; PKCE path added
+
+**Decision.** Add `scripts/auth_cognito.py` using OLX's real Cognito
+hosted UI (`pl-idp.login.olx.com`) as the browser-free auth path.
+
+**What we learned.**
+- The Cognito hosted UI domain is `pl-idp.login.olx.com` (confirmed via
+  OIDC discovery at `cognito-idp.eu-west-1.amazonaws.com/eu-west-1_dUjFuvTf4/.well-known/openid-configuration`).
+- The cookie named `access_token` on `.olx.pl` is a Cognito **id_token**
+  (`token_use: id`), not an access_token. OLX validates id_tokens as Bearer.
+- auth0-spa-js stores the real `access_token` + `refresh_token` in
+  localStorage key `@@auth0spajs@@::6j7elk01p32o648o1io8lvhhab::default::openid profile email offline_access`.
+- `browser_cookie3` reads from Chrome's on-disk SQLite — stale when Chrome
+  is running and auth0-spa-js has silently refreshed the token in-memory.
+- `apollo-tk` is NOT present in cookies unless the user has recently
+  interacted with the photo upload UI. Mint endpoint unknown.
+
+**Why add PKCE path.** The `browser_cookie3` stale-cookie problem caused
+a ~1h delay in the first live run. A fresh-token path (PKCE → save
+refresh_token → headless refresh) eliminates this class of failure.
+
+**Rules out.** Treating `browser_cookie3` as reliable for long-running
+sessions. It stays as a quick-start convenience and liveness check only.
+
+---
+
+## 2026-04-19 — HTTP recorder added (OLX_RECORD=1)
+
+**Decision.** Add `scripts/http_recorder.py` that transparently wraps
+`BrowserTransport`'s session when `OLX_RECORD=1` is set.
+
+**Why.** Reverse-engineering undocumented endpoints (apollo-tk mint,
+promotion packages) required long Chrome MCP sessions that can't be
+replayed. Recording to `references/xhr-recordings/` gives a durable
+fixture for future analysis — next unknown endpoint can be found by
+reading a file instead of re-driving Chrome.
+
+**Rules out.** Chrome MCP as the primary reverse-engineering tool for
+endpoints. Future hunts: set `OLX_RECORD=1`, do the action once in the
+real OLX UI, read the recording.
+
+---
+
 ## 2026-04-18 — v1 implementation landed; Task 14 live-run deferred
 
 **Decision.** All v1 tasks implemented and tested except Task 14 (live
