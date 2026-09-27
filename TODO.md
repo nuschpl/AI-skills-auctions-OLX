@@ -165,6 +165,44 @@ Fix the skill so this flow Just Works next time:
       Workaround: open `https://www.olx.pl/d/nowe-ogloszenie/` in Chrome,
       click the photo upload area (don't upload anything), then re-run.
 
+## Live run 2026-09-27 (Easywalker Jackey XL stroller)
+
+- [ ] **Headless competitor search (403).** `BrowserTransport.search_competitors`
+      (`GET /oferty/q-…/` via `requests`) now gets `403` from OLX
+      anti-bot; plain `curl` with a browser UA too. Session token in
+      the facade was also long expired (exp 2026-04). Goal: make it
+      work headless again (candidates: `/api/v1/offers/?query=` with
+      proper headers/cookies, curl_cffi TLS impersonation, headless
+      Playwright). Interim: browser-pane fallback documented in
+      SKILL.md step 3. Add a regression test once fixed.
+- [ ] **PKCE login is dead (WAF 403).** `run_pkce_flow()` authorize URL
+      (`pl-idp.login.olx.com/oauth2/authorize`, localhost redirect)
+      returns 403 even in a real Chrome — WAF, not redirect_mismatch.
+      No `~/.olx-skill/cognito_tokens.json` was ever saved, so there is
+      no refresh token. Chrome's on-disk `access_token` cookie is ~160
+      days stale. Need another bootstrap: read fresh token (and refresh
+      token if present) from the live olx.pl tab (AppleScript JS /
+      extension), or headless Cognito via `cognito_idp.py` with
+      WAF-accepted headers.
+- [ ] **Posting-form facts (stroller run, via Claude in Chrome).** Web
+      form caps photos at **8** (5 MB each) → drafting step must pick 8
+      and say so. Form now AI-prefills description/params from title +
+      main photo (buzzwordy) — always overwrite the textarea. Location
+      again defaulted to "Katowice, Kostuchna". Przesyłka OLX is on by
+      default; XL bucket (Poczta Polska 60×60×70, DPD) auto-checks when
+      the XL accordion is expanded. Ad landed in "Oczekujące" (moderation).
+- [ ] **Partner API work paused mid-way** (2026-09-27): `auth_oauth.py`
+      rewritten to swagger v2 (token URL `https://www.olx.pl/api/open/oauth/token`,
+      JSON body, scope `v2 read write`, bounce-page flow) + tests green;
+      `OfficialTransport` CRUD not started. Partner API takes images as
+      **public URLs only** (no upload endpoint) — needs a photo host
+      decision. App "nusch OLX Lister" awaiting OLX approval; callback
+      the registered public callback URL ← `docs/oauth-callback/index.html`.
+- [ ] **`source_listings` ignores non-image files.** Receipt
+      (`PARAGON_*.PDF`) in the listing folder wasn't surfaced or
+      fetched. Surface PDFs as "documents" (purchase date/price are
+      useful for the description) but never upload them to OLX.
+
 ## Wiring that doesn't need a live run
 
 - [ ] **Hard-blocker guard in `olx new`.** `listing_limits.is_hard_blocker()`

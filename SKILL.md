@@ -127,6 +127,20 @@ From this point on, invoke Python as `"$OLX_SKILL_HOME/venv/bin/python" -m scrip
    query will pull in generic "kask" or "rower" hits — drop them).
    Compute stats via `scripts.price_stats.compute_stats`.
 
+   **403 fallback (temporary — target is headless).** Since 2026-09
+   OLX anti-bot returns `403` to `search_competitors` (plain `curl`
+   is blocked too, so it's not an auth issue). Until the headless
+   path is fixed, open `https://www.olx.pl/oferty/q-<query>/` in the
+   built-in browser pane (`mcp__Claude_Browser__navigate`) and
+   extract cards with `mcp__Claude_Browser__javascript_tool`:
+   `[...document.querySelectorAll('[data-cy="l-card"]')].map(c=>({id:c.id,
+   t:c.querySelector('h4,h6')?.innerText,
+   p:c.querySelector('[data-testid="ad-price"]')?.innerText,
+   u:c.querySelector('a')?.href?.split('?')[0]}))`.
+   Build `SearchResult(id, title, price, url)` from those rows and
+   continue with `compute_stats` / `pick_samples` as normal. Tell the
+   user the fallback was used.
+
    Then present a **price-ladder table of sample auctions** so the
    user can manually judge where their price should sit, not just
    eyeball one number. Use
