@@ -2,6 +2,30 @@
 
 Read this first when picking up work on the OLX skill. Keeps assumptions and constraints in one place so the next session doesn't re-derive them.
 
+## Current status (2026-09-28) — read first
+
+- **Source of truth: this repo only.** Loaded via the `~/.claude/skills/OLX`
+  symlink. The marketplace plugin (`olx@AI-skills`, pinned to the April
+  `Initial public release` submodule commit) is **disabled** — don't
+  re-enable it for local use; bump the marketplace submodule only to
+  publish for others.
+- **Start OLX sessions in this repo's folder**, not in a parent or an
+  unrelated folder, so skill fixes made mid-listing land here with this
+  repo's `.claude/` and CLAUDE.md.
+- **User state: `$OLX_SKILL_HOME` only** (`~/.olx-skill`). The legacy
+  `$SKILL_ROOT/cache/` is gone.
+- **Two transports, developed in parallel** until their differences are
+  mapped: browser (Cognito session + Chrome) and official (Partner API
+  v2). Partner API app is approved; OAuth consent not yet run (needs
+  `app_credentials.json`). `OfficialTransport` does `get_user` only;
+  `capabilities.py` advertises official only for implemented ops.
+- **Drive:** `inbox_rclone.remote` is read-only; `inbox_rclone.write_remote`
+  is a separate write-capable remote used for `listing.md` records.
+- **Open decision:** where Partner API photos are hosted (public URLs,
+  unguessable names). Not the user's own web server.
+- **Before any push:** unpushed commits contain real ad ids and older ones
+  have a non-public author — see CLAUDE.md "What counts as PII".
+
 ## Where things are
 
 - Skill source: this repo (`$SKILL_ROOT`).

@@ -272,3 +272,25 @@ Reusing it would mean (a) giving the OLX skill full Drive access
 unnecessarily, and (b) coupling two unrelated tools to one OAuth grant.
 Separate remote = separate trust domain = safer and easier to reason
 about.
+
+## Optional: a write-capable remote for listing records
+
+The skill writes `listing.md` (the as-published record) into each
+listing folder. That needs write access, which the read-only remote
+above deliberately lacks. Add a second remote pinned to the same folder
+and name it in config:
+
+```bash
+rclone config create olx-gdrive-rw drive scope=drive root_folder_id=<YOUR_AUKCJE_FOLDER_ID>
+# browser opens once for Google consent
+```
+
+```json
+"inbox_rclone": {"remote": "olx-gdrive", "path": "OLX", "write_remote": "olx-gdrive-rw"}
+```
+
+`root_folder_id` is a convenience, not a security boundary: a `drive`
+scope token can reach the whole Drive. Reads stay on the read-only
+remote; the skill uses the write remote only for `copyto
+--ignore-existing` of `listing.md` and, with explicit per-run OK, moves
+into `_posted/`.

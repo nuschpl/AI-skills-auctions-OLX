@@ -205,9 +205,13 @@ description, photos}. Accept free-form edits.
      up (and in what order), and the description **exactly as it ended
      up on OLX** (including any last-minute edits made in the form).
      Drive is the single source of truth for listings; transcripts and
-     local scratch dirs are not. Needs a write-capable remote; while
-     only the read-only `olx-gdrive` exists, save it to the scratch dir
-     and tell the user to upload it.
+     local scratch dirs are not. Write it with the write-capable remote
+     named in `config.inbox_rclone.write_remote` (e.g. `olx-gdrive-rw`,
+     `scope=drive`, same `root_folder_id`), using `rclone copyto
+     --ignore-existing`. Reads keep using the read-only `remote`. If
+     `write_remote` is unset, save it to the scratch dir and tell the
+     user to upload it. Moving the folder to `_posted/` still needs the
+     user's explicit OK each time.
 
 8. **Return URL.** Print the live ad URL to the user.
 
