@@ -12,8 +12,14 @@ from scripts.auth_browser import (
     extract_tokens,
     load_chrome_cookies,
 )
-from scripts.auth_oauth import TokenStore
-from scripts.config import CONFIG_PATH, Config, TOKENS_PATH, load_config
+from scripts.auth_oauth import TokenStore, load_app_credentials
+from scripts.config import (
+    APP_CREDENTIALS_PATH,
+    CONFIG_PATH,
+    TOKENS_PATH,
+    Config,
+    load_config,
+)
 from scripts.inbox_rclone import RemoteListing, list_listings, load_listing
 from scripts.olx_api import OLX
 from scripts.photos import normalise_photo, strip_gps
@@ -26,7 +32,14 @@ def build_olx() -> OLX:
 
     ts = TokenStore(TOKENS_PATH)
     has_tokens = ts.load() is not None
-    official = OfficialTransport(token_store=ts) if has_tokens else None
+    official = None
+    if has_tokens:
+        creds = (
+            load_app_credentials(APP_CREDENTIALS_PATH)
+            if APP_CREDENTIALS_PATH.exists()
+            else None
+        )
+        official = OfficialTransport(token_store=ts, creds=creds)
 
     browser: BrowserTransport | None
     try:

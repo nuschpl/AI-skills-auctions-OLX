@@ -16,7 +16,22 @@ def test_capabilities_covers_required_ops():
 
 
 def test_pick_transport_auto_prefers_official_when_tokens_exist():
-    assert pick_transport("list_my_adverts", mode="auto", has_tokens=True) == "official"
+    assert pick_transport("get_user", mode="auto", has_tokens=True) == "official"
+
+
+@pytest.mark.parametrize("op", [
+    "create_advert", "upload_photo", "list_my_adverts", "delete_advert", "edit_advert",
+])
+def test_auto_with_tokens_keeps_unimplemented_official_ops_on_browser(op):
+    # Regression: once OAuth tokens exist, "auto" must not route ops to
+    # OfficialTransport stubs that raise NotImplementedError.
+    assert pick_transport(op, mode="auto", has_tokens=True) == "browser"
+
+
+def test_upload_photo_is_never_official():
+    # Partner API takes image URLs inside the advert payload; it has no
+    # upload endpoint.
+    assert "official" not in CAPABILITIES["upload_photo"]
 
 
 def test_pick_transport_auto_falls_back_to_browser_without_tokens():

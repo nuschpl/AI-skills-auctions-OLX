@@ -12,14 +12,16 @@ def test_list_my_adverts_routes_to_browser_when_no_tokens():
     official.list_my_adverts.assert_not_called()
 
 
-def test_list_my_adverts_routes_to_official_in_auto_with_tokens():
+def test_list_my_adverts_stays_on_browser_in_auto_with_tokens():
+    # OfficialTransport.list_my_adverts is not implemented yet; tokens
+    # alone must not reroute a working browser op to a stub.
     browser = MagicMock()
+    browser.list_my_adverts.return_value = []
     official = MagicMock()
-    official.list_my_adverts.return_value = []
     api = OLX(official=official, browser=browser, mode="auto", has_tokens=True)
     api.list_my_adverts()
-    official.list_my_adverts.assert_called_once()
-    browser.list_my_adverts.assert_not_called()
+    browser.list_my_adverts.assert_called_once()
+    official.list_my_adverts.assert_not_called()
 
 
 def test_apply_promotion_always_browser():

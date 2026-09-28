@@ -9,20 +9,25 @@ from typing import Literal
 
 Mode = Literal["official", "browser"]
 
+# "official" is listed only for ops OfficialTransport actually implements.
+# In "auto" mode the router prefers official as soon as OAuth tokens exist,
+# so advertising a stub here would break a working browser path. Add
+# "official" to an op in the same commit that implements it.
 CAPABILITIES: dict[str, set[Mode]] = {
     "apply_promotion": {"browser"},
-    "create_advert": {"official", "browser"},
-    "delete_advert": {"official", "browser"},
-    "edit_advert": {"official", "browser"},
-    "get_categories": {"official", "browser"},
+    "create_advert": {"browser"},
+    "delete_advert": {"browser"},
+    "edit_advert": {"browser"},
+    "get_categories": {"browser"},
     "get_user": {"official", "browser"},
-    "list_my_adverts": {"official", "browser"},
+    "list_my_adverts": {"browser"},
     # Category-aware listing: only the browser transport's GraphQL
-    # query returns category metadata. Official would need the (not
-    # yet available) Partner API.
+    # query returns category metadata.
     "list_my_adverts_detailed": {"browser"},
     "search_competitors": {"browser"},
-    "upload_photo": {"official", "browser"},
+    # Partner API has no upload endpoint: images go into the advert
+    # payload as public URLs. Never add "official" here.
+    "upload_photo": {"browser"},
 }
 
 

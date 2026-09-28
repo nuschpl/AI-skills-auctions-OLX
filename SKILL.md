@@ -198,6 +198,16 @@ description, photos}. Accept free-form edits.
      suggested rename instead, e.g. "rename `Aukcje/OLX/<slug>/` →
      `Aukcje/OLX/_posted/<slug>-<adid>/` in Drive when you have a
      minute." Do not attempt to move it via rclone.
+   - **Always write `listing.md` into the listing's Drive folder** — the
+     record of what was actually published: ad id, date, status after
+     publish, final title, category path, price (+ purchase price if
+     known), parameters, location, delivery options, which photos went
+     up (and in what order), and the description **exactly as it ended
+     up on OLX** (including any last-minute edits made in the form).
+     Drive is the single source of truth for listings; transcripts and
+     local scratch dirs are not. Needs a write-capable remote; while
+     only the read-only `olx-gdrive` exists, save it to the scratch dir
+     and tell the user to upload it.
 
 8. **Return URL.** Print the live ad URL to the user.
 

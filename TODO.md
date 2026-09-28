@@ -219,10 +219,14 @@ Fix the skill so this flow Just Works next time:
 
 ## Deferred (v2+)
 
-- [ ] **Mode A (OAuth2) advert CRUD.** Blocked on OLX developer-app
-      approval. `scripts/transports/official.py` `create_advert` /
-      `list_my_adverts` / `delete_advert` / `upload_photo` all raise
-      `NotImplementedError: deferred`.
+- [ ] **Mode A (OAuth2) advert CRUD.** App approved 2026-09-28.
+      `OfficialTransport` now has the v2 base URL + `Version: 2.0` header
+      + auto-refresh from `app_credentials.json`; `get_user` works.
+      `create_advert` / `list_my_adverts` / `delete_advert` still raise.
+      When implementing one, add `"official"` to that op in
+      `scripts/capabilities.py` in the same commit (auto mode prefers
+      official once tokens exist). Images: public URLs in the payload,
+      limit per category (`photos_limit`); needs a photo host.
 - [ ] Background pre-drafting daemon.
 - [ ] claude.ai drafter integration (nice-to-have).
 - [ ] Auto-renew cron.
