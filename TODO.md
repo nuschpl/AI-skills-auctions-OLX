@@ -203,6 +203,31 @@ Fix the skill so this flow Just Works next time:
       fetched. Surface PDFs as "documents" (purchase date/price are
       useful for the description) but never upload them to OLX.
 
+## Open decisions
+
+- [ ] **Photo hosting for the Partner API.** The v2 API has no upload
+      endpoint: `create_advert` takes `images: [{"url": ...}]` and OLX
+      downloads each URL itself (error "Image error: Remote file not
+      exists" if it can't); max images per category = `photos_limit`
+      from `GET /categories/{id}` (e.g. 8). Requirements for any host:
+      public HTTPS, direct image response (no HTML interstitial),
+      unguessable names (`secrets.token_urlsafe(24)`, no slug/date/ad
+      id), EXIF fully stripped (not just GPS), no directory listing,
+      `noindex`, delete after OLX has ingested the ad (verify on first
+      live run that OLX copies images to its own CDN). Ruled out: the
+      user's own web server (no AI access there). Candidates:
+      1. Google Drive, per-file "anyone with link" on GPS-stripped
+         *copies* (never originals, never the whole folder — it holds
+         notes and receipts). Risk: Drive redirects via
+         `drive.usercontent.google.com` and may answer automated fetches
+         with an HTML quota/"automated queries" page; the direct
+         `lh3.googleusercontent.com/d/<id>` form is undocumented. Needs
+         a live test with `olx-gdrive-rw`.
+      2. Object storage with short-lived presigned URLs (e.g. S3 /
+         Cloudflare R2): expiry replaces cleanup; needs an account.
+      3. Keep photos on the browser transport (upload to OLX's own
+         CDN, as today) and use the Partner API only for the rest.
+
 ## Wiring that doesn't need a live run
 
 - [ ] **Hard-blocker guard in `olx new`.** `listing_limits.is_hard_blocker()`
