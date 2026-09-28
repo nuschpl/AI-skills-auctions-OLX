@@ -71,6 +71,8 @@ From this point on, invoke Python as `"$OLX_SKILL_HOME/venv/bin/python" -m scrip
 
 ## Setup docs (point user here if anything's missing)
 
+- [`docs/USAGE.md`](docs/USAGE.md) — usage scenarios (phone→Drive, local
+  folder, fixing the skill mid-listing, testing the marketplace install).
 - [`docs/rclone-setup.md`](docs/rclone-setup.md) — one-time Drive +
   rclone setup for photo ingestion (browser + console steps).
 - [`docs/CONTEXT.md`](docs/CONTEXT.md) — running-state checkpoint;

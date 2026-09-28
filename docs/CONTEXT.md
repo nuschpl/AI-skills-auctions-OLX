@@ -9,9 +9,12 @@ Read this first when picking up work on the OLX skill. Keeps assumptions and con
   `Initial public release` submodule commit) is **disabled** — don't
   re-enable it for local use; bump the marketplace submodule only to
   publish for others.
-- **Start OLX sessions in this repo's folder**, not in a parent or an
-  unrelated folder, so skill fixes made mid-listing land here with this
-  repo's `.claude/` and CLAUDE.md.
+- **The skill is global** (`/OLX`, via the user-level skills dir), so a
+  listing session works from any folder. The folder only decides where
+  session history lands and which project hooks/CLAUDE.md apply: use one
+  fixed folder for OLX sessions — this repo is the natural choice when
+  the skill may need fixes mid-listing. Avoid parents whose hooks use
+  relative paths: the skill `cd`s into `$SKILL_ROOT`.
 - **User state: `$OLX_SKILL_HOME` only** (`~/.olx-skill`). The legacy
   `$SKILL_ROOT/cache/` is gone.
 - **Two transports, developed in parallel** until their differences are

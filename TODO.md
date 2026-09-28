@@ -229,6 +229,14 @@ Fix the skill so this flow Just Works next time:
          CDN, as today) and use the Partner API only for the rest.
 
 ## Wiring that doesn't need a live run
+- [ ] **`olx new <local-dir>` → upload to Drive first.** Add a helper
+      (e.g. `listing_create.ingest_local(dir, slug)`) that copies the
+      originals + notes into `Aukcje/OLX/<slug>/` via
+      `inbox_rclone.write_remote` (`--ignore-existing`, refuse if the
+      slug folder already exists), then continues with the normal Drive
+      flow. Keeps Drive the single source of truth. Test with a mocked
+      rclone subprocess. See docs/USAGE.md scenario B.
+
 
 - [ ] **Hard-blocker guard in `olx new`.** `listing_limits.is_hard_blocker()`
       exists but isn't called from the drafting step. Warn the user
