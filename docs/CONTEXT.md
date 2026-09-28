@@ -4,6 +4,10 @@ Read this first when picking up work on the OLX skill. Keeps assumptions and con
 
 ## Current status (2026-09-28) — read first
 
+Layout, sessions, transports, git hygiene and release flow are
+described in [MAINTAINING.md](MAINTAINING.md); user flows in
+[USAGE.md](USAGE.md).
+
 - **Source of truth: this repo only.** Loaded via the `~/.claude/skills/OLX`
   symlink. The marketplace plugin (`olx@AI-skills`, pinned to the April
   `Initial public release` submodule commit) is **disabled** — don't
