@@ -71,10 +71,10 @@ resume the listing. Listing data never enters git.
 - Author: `nuschpl <nuschpl@users.noreply.github.com>`, set per clone
   (`git config user.name/user.email`). Commits made before that was set
   may carry a real name — rewrite them before pushing.
-- Before any push run the PII checklist in [../CLAUDE.md](../CLAUDE.md):
-  real ad ids, own domain, home paths, Drive folder ids, location. Keep
-  such values in an untracked local note, not in tracked files.
-- Never push the local-only history snapshot branches (CLAUDE.md).
+- Before any push run the personal-data check in [../CLAUDE.md](../CLAUDE.md):
+  it reads the concrete values (name, domain, home path, Drive folder id,
+  location, ad ids) from where they already live — no list is kept anywhere.
+- Push named branches only (never `--all` / `--mirror`).
 
 ## Release to users
 

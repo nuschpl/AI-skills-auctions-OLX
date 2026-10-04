@@ -10,19 +10,25 @@ keep it that way.
 
 - Commit as `nuschpl` (set per clone: `git config user.name nuschpl`,
   `git config user.email nuschpl@users.noreply.github.com`).
-- **Before every push**, grep the outgoing commits — content, authors and
-  messages — for personal data. The concrete patterns are in
-  `$OLX_SKILL_HOME/PRIVATE-NOTES.md` (local only). Categories:
-  - real name or personal email; own domain (incl. the OAuth callback URL)
-  - Google Drive folder ids; absolute home paths under `/Users/`
-  - real OLX ad ids, OLX city/district codes, "City, District" of home
-  - `tests/fixtures/search_kask.html` growing past ~100 lines (scraped
-    third-party seller data)
-  - anything under `references/xhr-recordings/` that isn't a redacted
-    fixture (cookies, tokens)
+- **Before every push**, check the outgoing commits (`git log -p
+  origin/<branch>..<branch>` — content, authors and messages) for
+  personal data. Don't keep a list of the values anywhere; read them
+  fresh from where they already live and grep for each:
+  | Category | Source of the concrete value |
+  |---|---|
+  | real name, personal email | `git config --global user.name` / `user.email` |
+  | own domain (OAuth callback) | `redirect_uri` in `$OLX_SKILL_HOME/app_credentials.json` |
+  | home path | `$HOME` |
+  | Google Drive folder id | `root_folder_id` of the rclone remotes in `inbox_rclone` |
+  | home location, OLX city/district | `default_location` in `$OLX_SKILL_HOME/config.json` |
+  | real OLX ad ids | Partner API `GET /adverts`, `listing.md` files on Drive |
+
+  Also: `tests/fixtures/search_kask.html` must not grow past ~100 lines
+  (scraped third-party seller data), and nothing under
+  `references/xhr-recordings/` except redacted fixtures (cookies, tokens).
 - Never `git push --all` / `--mirror`; push named branches only.
 - If personal data does land in pushed history, the fix is a history
-  rewrite + force-push and a GitHub Support request for cached commits.
+  rewrite + force-push (GitHub may keep cached views of the old commits).
 
 ## What lives where (user-specific state, never committed)
 
