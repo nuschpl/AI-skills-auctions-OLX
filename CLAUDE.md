@@ -40,7 +40,7 @@ git show <sha>
 git checkout main
 git cherry-pick <sha>
 # Then: grep the resulting diff for PII patterns before pushing:
-#   (patterns: see PRIVATE-NOTES.md / your local scrub-patterns note)
+#   (patterns: see $OLX_SKILL_HOME/PRIVATE-NOTES.md, local only)
 #   plus scraped third-party data (search_kask.html-style fixtures).
 git diff HEAD~1 | less
 
