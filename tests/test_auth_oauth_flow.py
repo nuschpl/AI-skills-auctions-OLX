@@ -64,3 +64,19 @@ def test_state_mismatch_is_refused(tmp_path: Path, monkeypatch):
         run_authorize_flow(CREDS, TokenStore(tmp_path / "t.json"), timeout=0.1,
                            open_browser=False,
                            input_fn=lambda _: "https://example.com/olx/callback/?code=C&state=EVIL")
+
+
+def test_load_app_credentials_rejects_malformed_redirect_uri(tmp_path):
+    # Live failure: "https:/example.com/..." (one slash) made OLX answer
+    # "The redirect URI provided is missing or does not match" after login.
+    import json
+    import pytest
+    from scripts.auth_oauth import load_app_credentials
+
+    p = tmp_path / "app_credentials.json"
+    p.write_text(json.dumps({
+        "client_id": "1", "client_secret": "s",
+        "redirect_uri": "https:/example.com/olx/callback/",
+    }))
+    with pytest.raises(ValueError, match="redirect_uri"):
+        load_app_credentials(p)

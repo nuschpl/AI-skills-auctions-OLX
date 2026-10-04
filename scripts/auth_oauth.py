@@ -68,10 +68,18 @@ def load_app_credentials(path: Path) -> AppCredentials:
             'and save {"client_id", "client_secret", "redirect_uri"} there.'
         )
     d = json.loads(path.read_text())
+    redirect_uri = d["redirect_uri"]
+    u = urlparse(redirect_uri)
+    if u.scheme != "https" or not u.netloc:
+        # OLX only reports a mismatch after login; catch typos up front.
+        raise ValueError(
+            f"{path}: redirect_uri {redirect_uri!r} is not a valid https URL; "
+            "it must match the app's registered redirect URI exactly"
+        )
     return AppCredentials(
         client_id=str(d["client_id"]),
         client_secret=d["client_secret"],
-        redirect_uri=d["redirect_uri"],
+        redirect_uri=redirect_uri,
     )
 
 
